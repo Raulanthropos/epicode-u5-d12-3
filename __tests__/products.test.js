@@ -119,7 +119,6 @@ describe("Test APIs", () => {
     const response = await client.get("/products");
     console.log(response.body[0]);
     const initialResponseId = response.body[0]._id;
-    const initialResponseName = response.body[0].name;
     const response2 = await client
       .put("/products/" + initialResponseId)
       .send(editedData)
@@ -131,12 +130,22 @@ describe("Test APIs", () => {
     const response = await client.get("/products");
     console.log(response.body[0]);
     const initialResponseId = response.body[0]._id;
-    const initialResponseName = response.body[0].name;
     const response2 = await client
       .put("/products/" + initialResponseId)
       .send(editedData)
       .expect(200);
     expect(typeof response2.body.description).toEqual("string");
+  });
+
+  it("Should test that the type of price in a response from PUT /products/:id is 'number'", async () => {
+    const response = await client.get("/products");
+    console.log(response.body[0]);
+    const initialResponseId = response.body[0]._id;
+    const response2 = await client
+      .put("/products/" + initialResponseId)
+      .send(validProduct)
+      .expect(200);
+    expect(typeof response2.body.price).toEqual("number");
   });
 
 })
