@@ -36,6 +36,11 @@ const notValidProduct = {
   price: 100,
 }
 
+const editedData = {
+  name: "newName",
+  description: "newDescription"
+};
+
 beforeAll(async () => {
   await mongoose.connect(process.env.MONGO_URL_TEST)
   const product = new ProductsModel({ name: "test", description: "blalblabla", price: 20 })
@@ -67,4 +72,80 @@ describe("Test APIs", () => {
   it("Should test that POST /products with a not valid product returns a 400", async () => {
     await client.post("/products").send(notValidProduct).expect(400)
   })
+
+  it("Should test that GET /products/:id with a non-existing ID returns 404", async () => {
+    await client.get("/products/123456123456123456123456").expect(404);
+  });
+
+  it("Should test that GET /products/:id returns the correct product", async () => {
+    const response = await client.get("/products");
+    const initialResponseId = response.body[0]._id;
+    const response2 = await client
+      .get("/products/" + initialResponseId)
+      .expect(200);
+    expect(response2.body._id).toEqual(initialResponseId);
+  });
+
+  it("Should test that DELETE /products/:id returns 204 after deletion", async () => {
+    const response = await client.get("/products");
+    console.log(response.body[0]);
+    const initialResponseId = response.body[0]._id;
+    const response2 = await client
+      .delete("/products/" + initialResponseId)
+      .expect(204);
+  });
+
+  it("Should test that DELETE /products/:id with a non-existing ID returns 404", async () => {
+    await client.delete("/products/123456123456123456123456").expect(404);
+  });
+
+  it("Should test that editing a product name with PUT /products/:id is successful", async () => {
+    const response = await client.get("/products");
+    console.log(response.body[0]);
+    const initialResponseId = response.body[0]._id;
+    const initialResponseName = response.body[0].name;
+    const response2 = await client
+      .put("/products/" + initialResponseId)
+      .send(editedData)
+      .expect(200);
+    expect(response2.body.name).toEqual("newName");
+  });
+
+  it("Should test that PUT /products/:id with a non-existing ID returns 404", async () => {
+    await client.put("/products/123456123456123456123456").expect(404);
+  });
+
+  it("Should test that the type of name in a response from PUT /products/:id is 'string'", async () => {
+    const response = await client.get("/products");
+    console.log(response.body[0]);
+    const initialResponseId = response.body[0]._id;
+    const response2 = await client
+      .put("/products/" + initialResponseId)
+      .send(editedData)
+      .expect(200);
+    expect(typeof response2.body.name).toEqual("string");
+  });
+
+  it("Should test that the type of description in a response from PUT /products/:id is 'string'", async () => {
+    const response = await client.get("/products");
+    console.log(response.body[0]);
+    const initialResponseId = response.body[0]._id;
+    const response2 = await client
+      .put("/products/" + initialResponseId)
+      .send(editedData)
+      .expect(200);
+    expect(typeof response2.body.description).toEqual("string");
+  });
+
+  it("Should test that the type of price in a response from PUT /products/:id is 'number'", async () => {
+    const response = await client.get("/products");
+    console.log(response.body[0]);
+    const initialResponseId = response.body[0]._id;
+    const response2 = await client
+      .put("/products/" + initialResponseId)
+      .send(validProduct)
+      .expect(200);
+    expect(typeof response2.body.price).toEqual("number");
+  });
+
 })
